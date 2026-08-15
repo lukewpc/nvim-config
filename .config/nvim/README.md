@@ -15,7 +15,7 @@ A modern, LazyVim-based Neovim configuration optimized for DevOps/Cloud-Native d
 - **Linting**: nvim-lint (golangci-lint, hadolint, tflint, etc.)
 - **Git**: gitsigns, lazygit integration
 - **Colorscheme**: catppuccin (mocha)
-- **Repo workspaces**: each tab is one git repo (`:tcd`); `<leader>fp` switches repos
+- **Repo workspaces**: each tab is one git repo (`:tcd`); `<leader>fp` switches repos. File/buffer commands stay in the current repo; capital-letter variants (`<leader>fB`, `<leader>fR`, `<leader>bO`) are global.
 
 ## Requirements
 

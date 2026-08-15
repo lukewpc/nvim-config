@@ -127,4 +127,77 @@ function M.path_under_cwd(path, cwd)
   return path == cwd or vim.startswith(path, cwd .. "/")
 end
 
+--- Visible in this tab, or a normal file under this tab's cwd.
+---@param buf integer
+---@return boolean
+function M.buf_in_workspace(buf)
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then
+    return false
+  end
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_get_buf(win) == buf then
+      return true
+    end
+  end
+  if vim.bo[buf].buftype ~= "" then
+    return false
+  end
+  local name = vim.api.nvim_buf_get_name(buf)
+  if name == "" then
+    return false
+  end
+  return M.path_under_cwd(name)
+end
+
+--- Existing files of listed workspace buffers (for grep).
+---@return string[]
+function M.workspace_file_paths()
+  local paths = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted and M.buf_in_workspace(buf) then
+      local name = vim.api.nvim_buf_get_name(buf)
+      if name ~= "" and vim.uv.fs_stat(name) then
+        paths[#paths + 1] = name
+      end
+    end
+  end
+  return paths
+end
+
+--- Alternate buffer if it belongs here, else most recently used workspace buffer.
+---@return integer|nil
+function M.alternate_buf()
+  local alt = vim.fn.bufnr("#")
+  if alt > 0 and vim.api.nvim_buf_is_valid(alt) and vim.bo[alt].buflisted and M.buf_in_workspace(alt) then
+    return alt
+  end
+  local cur = vim.api.nvim_get_current_buf()
+  local best, best_used = nil, 0
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if buf ~= cur and vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted and M.buf_in_workspace(buf) then
+      local info = vim.fn.getbufinfo(buf)[1]
+      if info and info.lastused > best_used then
+        best, best_used = buf, info.lastused
+      end
+    end
+  end
+  return best
+end
+
+--- Snacks picker filter: keep items in this workspace.
+---@return table
+function M.picker_filter()
+  return {
+    filter = function(item)
+      if item.buf then
+        return M.buf_in_workspace(item.buf)
+      end
+      if item.file then
+        return M.path_under_cwd(item.file)
+      end
+      return false
+    end,
+  }
+end
+
 return M

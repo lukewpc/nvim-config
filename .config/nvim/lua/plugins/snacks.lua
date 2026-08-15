@@ -1,5 +1,6 @@
 -- Snacks.nvim overrides
 -- https://github.com/folke/snacks.nvim
+-- File/buffer pickers default to this tab's repo. Capital-letter variants stay global.
 return {
   "folke/snacks.nvim",
   opts = {
@@ -24,7 +25,63 @@ return {
             end
           end,
         },
+        -- Default recent list is this repo. <leader>fR passes cwd = false.
+        recent = {
+          filter = { cwd = true },
+        },
+        jumps = {
+          filter = { cwd = true },
+        },
       },
+    },
+  },
+  keys = {
+    {
+      "<leader>,",
+      function()
+        Snacks.picker.buffers({ filter = require("config.workspaces").picker_filter() })
+      end,
+      desc = "Buffers (workspace)",
+    },
+    {
+      "<leader>fb",
+      function()
+        Snacks.picker.buffers({ filter = require("config.workspaces").picker_filter() })
+      end,
+      desc = "Buffers (workspace)",
+    },
+    {
+      "<leader>fB",
+      function()
+        Snacks.picker.buffers({ hidden = true, nofile = true, filter = {} })
+      end,
+      desc = "Buffers (all)",
+    },
+    {
+      "<leader>fr",
+      function()
+        Snacks.picker.recent({ filter = { cwd = true } })
+      end,
+      desc = "Recent (workspace)",
+    },
+    {
+      "<leader>fR",
+      function()
+        Snacks.picker.recent({ filter = { cwd = false } })
+      end,
+      desc = "Recent (all)",
+    },
+    {
+      "<leader>sB",
+      function()
+        local dirs = require("config.workspaces").workspace_file_paths()
+        Snacks.picker.grep({
+          dirs = dirs,
+          live = true,
+          need_search = false,
+        })
+      end,
+      desc = "Grep workspace buffers",
     },
   },
 }

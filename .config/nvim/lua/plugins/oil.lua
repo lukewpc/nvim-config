@@ -7,7 +7,13 @@ return {
     lazy = false,
     keys = {
       { "-", "<cmd>Oil<CR>", desc = "Open parent directory (Oil)" },
-      { "<leader>e", "<cmd>Oil<CR>", desc = "Explorer (Oil)" },
+      {
+        "<leader>e",
+        function()
+          require("oil").open(vim.fn.getcwd())
+        end,
+        desc = "Explorer (workspace root)",
+      },
     },
     opts = {
       -- Show hidden files (dotfiles)

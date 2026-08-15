@@ -33,7 +33,9 @@ map("x", "p", [["_dP]], { desc = "Paste without yanking" })
 -- ╰─────────────────────────────────────────────────────────╯
 
 map("n", "-", "<cmd>Oil<CR>", { desc = "Open parent directory (Oil)" })
-map("n", "<leader>e", "<cmd>Oil<CR>", { desc = "Explorer (Oil)" })
+map("n", "<leader>e", function()
+  require("oil").open(vim.fn.getcwd())
+end, { desc = "Explorer (workspace root)" })
 
 -- ╭─────────────────────────────────────────────────────────╮
 -- │ Config                                                   │
@@ -197,4 +199,75 @@ for i = 1, 9 do
     vim.cmd("buffer " .. buf)
   end, { desc = "Move buffer to workspace " .. i })
 end
+
+-- ╭─────────────────────────────────────────────────────────╮
+-- │ Buffers (this workspace unless marked "all")              │
+-- ╰─────────────────────────────────────────────────────────╯
+
+map("n", "<leader>,", function()
+  Snacks.picker.buffers({ filter = workspaces.picker_filter() })
+end, { desc = "Buffers (workspace)" })
+
+map("n", "<leader>fb", function()
+  Snacks.picker.buffers({ filter = workspaces.picker_filter() })
+end, { desc = "Buffers (workspace)" })
+
+map("n", "<leader>fB", function()
+  Snacks.picker.buffers({ hidden = true, nofile = true, filter = {} })
+end, { desc = "Buffers (all)" })
+
+map("n", "<leader>fr", function()
+  Snacks.picker.recent({ filter = { cwd = true } })
+end, { desc = "Recent (workspace)" })
+
+map("n", "<leader>fR", function()
+  Snacks.picker.recent({ filter = { cwd = false } })
+end, { desc = "Recent (all)" })
+
+map("n", "<leader>sB", function()
+  Snacks.picker.grep({
+    dirs = workspaces.workspace_file_paths(),
+    live = true,
+    need_search = false,
+  })
+end, { desc = "Grep workspace buffers" })
+
+map("n", "<leader>bb", function()
+  local alt = workspaces.alternate_buf()
+  if alt then
+    vim.cmd("buffer " .. alt)
+  else
+    vim.notify("No other workspace buffer", vim.log.levels.INFO)
+  end
+end, { desc = "Switch to Other Buffer (workspace)" })
+
+map("n", "<leader>`", function()
+  local alt = workspaces.alternate_buf()
+  if alt then
+    vim.cmd("buffer " .. alt)
+  else
+    vim.notify("No other workspace buffer", vim.log.levels.INFO)
+  end
+end, { desc = "Switch to Other Buffer (workspace)" })
+
+map("n", "<leader>bo", function()
+  local cur = vim.api.nvim_get_current_buf()
+  Snacks.bufdelete({
+    filter = function(b)
+      return b ~= cur and workspaces.buf_in_workspace(b)
+    end,
+  })
+end, { desc = "Delete Other Buffers (workspace)" })
+
+map("n", "<leader>bO", function()
+  Snacks.bufdelete.other()
+end, { desc = "Delete Other Buffers (all)" })
+
+map("n", "<leader>bi", function()
+  Snacks.bufdelete({
+    filter = function(b)
+      return workspaces.buf_in_workspace(b) and vim.fn.bufwinnr(b) == -1
+    end,
+  })
+end, { desc = "Delete Invisible Buffers (workspace)" })
 

@@ -14,20 +14,7 @@ return {
         -- This tab's repo files (under :tcd) plus anything actually shown here.
         -- Other workspaces' files stay off the bar.
         custom_filter = function(buf)
-          local workspaces = require("config.workspaces")
-          for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-            if vim.api.nvim_win_get_buf(win) == buf then
-              return true
-            end
-          end
-          if vim.bo[buf].buftype ~= "" then
-            return false
-          end
-          local name = vim.api.nvim_buf_get_name(buf)
-          if name == "" then
-            return false
-          end
-          return workspaces.path_under_cwd(name)
+          return require("config.workspaces").buf_in_workspace(buf)
         end,
 
         -- Separator style between buffer entries
