@@ -38,11 +38,6 @@ require("lazy").setup({
     { import = "lazyvim.plugins.extras.editor.inc-rename" },
 
     -- ╭─────────────────────────────────────────────────────────╮
-    -- │ Util Extras                                              │
-    -- ╰─────────────────────────────────────────────────────────╯
-    { import = "lazyvim.plugins.extras.util.project" },
-
-    -- ╭─────────────────────────────────────────────────────────╮
     -- │ DAP (Debug Adapter Protocol)                             │
     -- ╰─────────────────────────────────────────────────────────╯
     { import = "lazyvim.plugins.extras.dap.core" },

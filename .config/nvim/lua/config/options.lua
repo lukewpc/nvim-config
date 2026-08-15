@@ -70,3 +70,7 @@ opt.conceallevel = 2 -- Hide markup in markdown
 -- Disable netrw (we use oil.nvim)
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+
+-- LazyVim file/grep "Root Dir" follows the tab's cwd (:tcd), not the
+-- current file's LSP or .git root. Each tab is one repository.
+vim.g.root_spec = { "cwd" }

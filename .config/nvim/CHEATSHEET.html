@@ -165,9 +165,10 @@
         <tr><td><code>Alt+=</code></td><td>Split vertical (pane right)</td></tr>
         <tr><td><code>Alt+q</code></td><td>Close pane</td></tr>
       </table>
-      <h3>Workspaces (Tabs)</h3>
+      <h3>Workspaces (Tabs = Repos)</h3>
       <table>
-        <tr><td><code>Alt+1–9</code></td><td>Switch to workspace N</td></tr>
+        <tr><td><code>Spc f p</code></td><td>Open / focus a repo workspace</td></tr>
+        <tr><td><code>Alt+1–9</code></td><td>Switch to workspace N (existing only)</td></tr>
         <tr><td><code>Alt+Shift+1–9</code></td><td>Move buffer to workspace N</td></tr>
       </table>
     </div>
@@ -221,7 +222,7 @@
             <tr><td><code>Spc f f</code></td><td>Find files (root)</td></tr>
             <tr><td><code>Spc f r</code></td><td>Recent files</td></tr>
             <tr><td><code>Spc f g</code></td><td>Git files only</td></tr>
-            <tr><td><code>Spc f p</code></td><td>Projects</td></tr>
+            <tr><td><code>Spc f p</code></td><td>Open / focus repo workspace</td></tr>
             <tr><td><code>Spc ,</code></td><td>Switch open buffers</td></tr>
           </table>
           <h3>Search</h3>
@@ -270,8 +271,8 @@
     <div class="section">
       <h2>Terminal</h2>
       <table>
-        <tr><td><code>Alt+Enter</code></td><td>Open/focus main terminal</td></tr>
-        <tr><td><code>Alt+\</code></td><td>Open/focus Kiro terminal</td></tr>
+        <tr><td><code>Alt+Enter</code></td><td>This workspace’s terminal (repo root)</td></tr>
+        <tr><td><code>Alt+\</code></td><td>This workspace’s Kiro terminal (repo root)</td></tr>
         <tr><td><code>Ctrl-/</code></td><td>Toggle floating terminal</td></tr>
         <tr><td><code>Ctrl-\</code> / <code>Esc Esc</code></td><td>Exit terminal mode</td></tr>
         <tr><td><code>Alt+arrows</code></td><td>Navigate out of terminal</td></tr>
@@ -482,8 +483,8 @@
           <li><strong>Persistent undo</strong> — history survives across sessions.</li>
         </ul>
         <ul class="tip-list">
-          <li><strong>No tmux</strong> — nvim tabs = workspaces, splits = tiled panes (Alt = i3).</li>
-          <li>Start nvim from <code>/workspace</code> to grep across all projects.</li>
+          <li><strong>No tmux</strong> — nvim tabs = repo workspaces, splits = tiled panes (Alt = i3).</li>
+          <li><code>Spc f p</code> opens or focuses a repo tab. Find/grep stay in that repo.</li>
           <li><strong>Diffview</strong> right side is a live buffer — LSP, save, edit all work normally.</li>
           <li><strong>Oil</strong>: rename files by editing their names in the buffer and saving.</li>
         </ul>

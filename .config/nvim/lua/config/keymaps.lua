@@ -59,10 +59,6 @@ map("t", "<S-CR>", function()
   end
 end, { desc = "Newline in terminal (Shift+Enter)" })
 
--- Tracked terminal buffer numbers. nil means "not yet opened / was closed".
-local _main_term_bufnr = nil  -- Alt-Enter terminal  (bottom right)
-local _kiro_term_bufnr = nil  -- Alt-Backslash terminal (bottom left, runs kiro-cli)
-
 --- Return the window ID that is currently displaying `bufnr`, or nil.
 local function find_win_for_buf(bufnr)
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -82,21 +78,21 @@ local function focus_win(win)
   vim.cmd("startinsert")
 end
 
--- Alt-Enter: open (or focus) the main terminal on the bottom right.
+-- Alt-Enter: open (or focus) this tab's main terminal (bottom right).
+-- The shell inherits the tab cwd (repo root).
 local function open_or_focus_main_term()
-  local win = find_win_for_buf(_main_term_bufnr)
+  local win = find_win_for_buf(vim.t.main_term_bufnr)
   if win then
     focus_win(win)
     return
   end
-  -- Not visible — open a new horizontal split and start a terminal.
   vim.cmd("split | terminal")
-  _main_term_bufnr = vim.api.nvim_get_current_buf()
+  vim.t.main_term_bufnr = vim.api.nvim_get_current_buf()
 end
 
--- Alt-Backslash: open (or focus) the kiro terminal on the bottom left.
+-- Alt-Backslash: open (or focus) this tab's kiro terminal (bottom left).
 local function open_or_focus_kiro_term()
-  local win = find_win_for_buf(_kiro_term_bufnr)
+  local win = find_win_for_buf(vim.t.kiro_term_bufnr)
   if win then
     focus_win(win)
     return
@@ -107,14 +103,13 @@ local function open_or_focus_kiro_term()
   vim.api.nvim_create_autocmd("TermOpen", {
     once = true,
     callback = function(ev)
-      _kiro_term_bufnr = ev.buf
+      vim.t.kiro_term_bufnr = ev.buf
       local chan = vim.bo[ev.buf].channel
       if chan and chan > 0 then
         vim.fn.chansend(chan, "kiro-cli\n")
       end
     end,
   })
-  -- Open the split + terminal. TermOpen fires here, triggering the handler above.
   vim.cmd("split | terminal")
   -- Move this pane to the far left so it sits left of the main terminal.
   vim.cmd("wincmd H")
@@ -128,11 +123,12 @@ end
 --   Alt+Shift+h/j/k/l = move/swap pane
 --   Alt+-             = split horizontal (pane below)
 --   Alt+=             = split vertical (pane right)
---   Alt+Enter         = open/focus main terminal (bottom right)
---   Alt+Backslash     = open/focus kiro terminal (bottom left)
+--   Alt+Enter         = open/focus this workspace's main terminal
+--   Alt+Backslash     = open/focus this workspace's kiro terminal
 --   Alt+q             = close pane (keep buffer alive)
 --   Alt+1-9           = switch to workspace (tab) N
 --   Alt+Shift+1-9     = move current buffer to workspace N
+--   Each tab is one repo (:tcd). Terminals are per-tab and start at the repo root.
 
 -- Focus pane (works from normal and terminal mode)
 map({ "n", "t" }, "<A-Left>", "<cmd>wincmd h<CR>", { desc = "Focus pane left" })
@@ -159,39 +155,45 @@ map({ "n", "t" }, "<A-Bslash>", open_or_focus_kiro_term, { desc = "Open/focus ki
 -- Close pane (close split, keep buffer alive)
 map({ "n", "t" }, "<A-q>", "<cmd>close<CR>", { desc = "Close pane" })
 
+local workspaces = require("config.workspaces")
+
 -- Workspace (tab) switching: Alt+1 through Alt+9
+-- Only switches existing tabs. New repo workspaces come from <leader>fp.
 for i = 1, 9 do
   map({ "n", "t" }, "<A-" .. i .. ">", function()
-    -- Create tab if it doesn't exist yet
-    local tab_count = vim.fn.tabpagenr("$")
-    if i > tab_count then
-      -- Create tabs up to the requested number
-      for _ = tab_count + 1, i do
-        vim.cmd("tablast | tabnew")
-      end
+    if i > vim.fn.tabpagenr("$") then
+      vim.notify("No workspace " .. i, vim.log.levels.WARN)
+      return
     end
     vim.cmd("tabn " .. i)
   end, { desc = "Go to workspace " .. i })
 end
 
 -- Move buffer to workspace N: Alt+Shift+1 through Alt+9
--- (opens the current buffer in tab N, closes it in the current split)
+local shift_keys = { "!", "@", "#", "$", "%", "^", "&", "*", "(" }
 for i = 1, 9 do
-  map("n", "<A-" .. (i == 1 and "!" or i == 2 and "@" or i == 3 and "#" or i == 4 and "$" or i == 5 and "%" or i == 6 and "^" or i == 7 and "&" or i == 8 and "*" or "(") .. ">", function()
+  map("n", "<A-" .. shift_keys[i] .. ">", function()
     local buf = vim.api.nvim_get_current_buf()
+    local root = workspaces.repo_root(vim.api.nvim_buf_get_name(buf))
     local tab_count = vim.fn.tabpagenr("$")
-    -- Create tabs up to the target if needed
-    if i > tab_count then
-      for _ = tab_count + 1, i do
-        vim.cmd("tablast | tabnew")
-      end
-    end
-    -- Close pane in current tab (but don't wipe the buffer)
+
+    -- Close pane in current tab (but don't wipe the buffer or the last window)
     if #vim.api.nvim_tabpage_list_wins(0) > 1 then
       vim.cmd("close")
     end
-    -- Switch to target tab and open the buffer
-    vim.cmd("tabn " .. i)
+
+    if i > tab_count then
+      -- One new tab, not a gap-filling run of empty workspaces
+      vim.cmd("tablast | tabnew")
+      if root then
+        workspaces.tcd(root)
+      end
+    else
+      vim.cmd("tabn " .. i)
+      if root and not workspaces.has_local_cwd() then
+        workspaces.tcd(root)
+      end
+    end
     vim.cmd("buffer " .. buf)
   end, { desc = "Move buffer to workspace " .. i })
 end

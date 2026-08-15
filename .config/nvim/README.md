@@ -15,6 +15,7 @@ A modern, LazyVim-based Neovim configuration optimized for DevOps/Cloud-Native d
 - **Linting**: nvim-lint (golangci-lint, hadolint, tflint, etc.)
 - **Git**: gitsigns, lazygit integration
 - **Colorscheme**: catppuccin (mocha)
+- **Repo workspaces**: each tab is one git repo (`:tcd`); `<leader>fp` switches repos
 
 ## Requirements
 
@@ -51,7 +52,8 @@ nvim
 │   │   ├── lazy.lua              # lazy.nvim bootstrap + extras
 │   │   ├── options.lua           # Neovim options
 │   │   ├── keymaps.lua           # Custom key bindings
-│   │   └── autocmds.lua         # Auto-commands
+│   │   ├── autocmds.lua         # Auto-commands
+│   │   └── workspaces.lua       # Repo-scoped tabs (:tcd)
 │   └── plugins/
 │       ├── colorscheme.lua       # Catppuccin config
 │       ├── editor.lua            # QoL editor plugins
