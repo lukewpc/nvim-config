@@ -85,6 +85,55 @@ function M.tcd(path)
   vim.t.repo_name = vim.fn.fnamemodify(dir, ":t")
 end
 
+--- Return the window ID in the current tab that is displaying `bufnr`, or nil.
+---@param bufnr integer|nil
+---@return integer|nil
+local function find_win_for_buf(bufnr)
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil
+  end
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_get_buf(win) == bufnr then
+      return win
+    end
+  end
+  return nil
+end
+
+--- True if the current buffer is an unmodified unnamed scratch (e.g. from :tabnew).
+---@return boolean
+local function current_buf_is_empty_scratch()
+  local buf = vim.api.nvim_get_current_buf()
+  return vim.api.nvim_buf_get_name(buf) == ""
+    and vim.bo[buf].buftype == ""
+    and not vim.bo[buf].modified
+end
+
+--- Open or focus this tab's main terminal (same as Alt-Enter).
+--- The shell inherits the tab cwd (repo root). An empty scratch window is
+--- replaced so a new project tab does not keep a leftover [No Name] buffer.
+function M.open_main_term()
+  local win = find_win_for_buf(vim.t.main_term_bufnr)
+  if win then
+    vim.api.nvim_set_current_win(win)
+    vim.cmd("startinsert")
+    return
+  end
+
+  local scratch = vim.api.nvim_get_current_buf()
+  local replace = current_buf_is_empty_scratch()
+  if replace then
+    vim.cmd("terminal")
+  else
+    vim.cmd("split | terminal")
+  end
+  vim.t.main_term_bufnr = vim.api.nvim_get_current_buf()
+  if replace and scratch ~= vim.t.main_term_bufnr and vim.api.nvim_buf_is_valid(scratch) then
+    vim.api.nvim_buf_delete(scratch, { force = true })
+  end
+  vim.cmd("startinsert")
+end
+
 --- Jump to the tab for `path`, or open a new tab and :tcd there.
 ---@param path string
 function M.open_repo(path)
@@ -108,6 +157,7 @@ function M.open_repo(path)
   else
     vim.cmd("tabnew")
     M.tcd(dir)
+    M.open_main_term()
   end
 
   vim.t.repo_name = vim.t.repo_name or vim.fn.fnamemodify(dir, ":t")

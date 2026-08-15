@@ -3,6 +3,7 @@
 -- Add any additional keymaps here
 
 local map = vim.keymap.set
+local workspaces = require("config.workspaces")
 
 -- ╭─────────────────────────────────────────────────────────╮
 -- │ General                                                  │
@@ -51,7 +52,7 @@ end, { desc = "Reload Neovim config" })
 -- ╰─────────────────────────────────────────────────────────╯
 
 map("t", "<C-\\>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
-map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Shift+Enter: insert a newline in the terminal process (e.g. Kiro CLI multi-line input)
 map("t", "<S-CR>", function()
@@ -78,18 +79,6 @@ end
 local function focus_win(win)
   vim.api.nvim_set_current_win(win)
   vim.cmd("startinsert")
-end
-
--- Alt-Enter: open (or focus) this tab's main terminal (bottom right).
--- The shell inherits the tab cwd (repo root).
-local function open_or_focus_main_term()
-  local win = find_win_for_buf(vim.t.main_term_bufnr)
-  if win then
-    focus_win(win)
-    return
-  end
-  vim.cmd("split | terminal")
-  vim.t.main_term_bufnr = vim.api.nvim_get_current_buf()
 end
 
 -- Alt-Backslash: open (or focus) this tab's kiro terminal (bottom left).
@@ -149,15 +138,13 @@ map("n", "<A-->", "<cmd>split | enew<CR>", { desc = "Split horizontal (empty pan
 map("n", "<A-=>", "<cmd>vsplit | enew<CR>", { desc = "Split vertical (empty pane right)" })
 
 -- Alt+Enter: open/focus main terminal (bottom right)
-map({ "n", "t" }, "<A-CR>", open_or_focus_main_term, { desc = "Open/focus main terminal" })
+map({ "n", "t" }, "<A-CR>", workspaces.open_main_term, { desc = "Open/focus main terminal" })
 
 -- Alt+Backslash: open/focus kiro terminal (bottom left, runs kiro-cli)
 map({ "n", "t" }, "<A-Bslash>", open_or_focus_kiro_term, { desc = "Open/focus kiro terminal" })
 
 -- Close pane (close split, keep buffer alive)
 map({ "n", "t" }, "<A-q>", "<cmd>close<CR>", { desc = "Close pane" })
-
-local workspaces = require("config.workspaces")
 
 -- Workspace (tab) switching: Alt+1 through Alt+9
 -- Only switches existing tabs. New repo workspaces come from <leader>fp.
