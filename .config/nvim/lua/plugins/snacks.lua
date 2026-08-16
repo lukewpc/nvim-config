@@ -3,6 +3,10 @@
 -- File/buffer pickers default to this tab's repo. Capital-letter variants stay global.
 return {
   "folke/snacks.nvim",
+  init = function()
+    -- Inject LazyGit `E` → Diffview custom commands before the first <leader>gg.
+    require("config.lazygit").setup()
+  end,
   opts = {
     picker = {
       sources = {

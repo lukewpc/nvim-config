@@ -75,6 +75,9 @@ return {
   --   :DiffviewFileHistory %     → commit history for current file
   --   :DiffviewFileHistory       → commit history for whole repo
   --
+  -- From LazyGit (<leader>gg): press E on a commit, branch, tag, or stash
+  -- to close LazyGit and open Diffview for that ref vs the working tree.
+  --
   -- In the file panel (left):
   --   j/k          navigate files
   --   Enter/l      open diff for selected file
