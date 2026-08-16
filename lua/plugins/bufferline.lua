@@ -20,9 +20,8 @@ return {
         -- Separator style between buffer entries
         separator_style = "thin",
 
-        -- Show tab pages as a separate section on the right
-        -- This gives you a clear "Tab 1 | Tab 2 | Tab 3" indicator
-        tab_size = 18,
+        -- Tab-page indicators on the right: "N reponame" (see workspaces.sync_tab_names)
+        tab_size = 22,
 
         -- Show close icons on tabs
         show_close_icon = true,

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Personal Neovim keybinding cheat sheet">
+<title>Neovim Cheat Sheet</title>
+<style>
+  :root {
+    --bg: #e8eaed;
+    --surface: #fff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --key-bg: #f3f4f6;
+    --key-border: #d1d5db;
+    --key-fg: #1e3a5f;
+    --header-h: 64px;
+    --max: 1800px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 12px);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  /* ── sticky header ── */
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .top-inner {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .subtitle code {
+    font-size: 12px;
+    padding: 0 4px;
+  }
+
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .jump a {
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+
+  .jump a:hover { filter: brightness(0.96); }
+
+  .jump a[href="#layout"] { color: #1d4ed8; background: #dbeafe; }
+  .jump a[href="#find"]   { color: #0f766e; background: #ccfbf1; }
+  .jump a[href="#edit"]   { color: #b45309; background: #fef3c7; }
+  .jump a[href="#code"]   { color: #6d28d9; background: #ede9fe; }
+  .jump a[href="#git"]    { color: #047857; background: #d1fae5; }
+  .jump a[href="#system"] { color: #334155; background: #e2e8f0; }
+
+  /* ── page canvas ── */
+  main {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 16px 24px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── bands ── */
+  .band {
+    --accent: #2563eb;
+    --accent-bg: #eff6ff;
+    --accent-ink: #1d4ed8;
+    background: var(--surface);
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-left: 5px solid var(--accent);
+  }
+
+  .band:target {
+    box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .band-layout { --accent: #2563eb; --accent-bg: #eff6ff; --accent-ink: #1d4ed8; }
+  .band-find   { --accent: #0d9488; --accent-bg: #f0fdfa; --accent-ink: #0f766e; }
+  .band-edit   { --accent: #d97706; --accent-bg: #fffbeb; --accent-ink: #b45309; }
+  .band-code   { --accent: #7c3aed; --accent-bg: #f5f3ff; --accent-ink: #6d28d9; }
+  .band-git    { --accent: #059669; --accent-bg: #ecfdf5; --accent-ink: #047857; }
+  .band-system { --accent: #475569; --accent-bg: #f8fafc; --accent-ink: #334155; }
+
+  .band-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--accent-bg);
+    padding: 8px 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .band-head h2 {
+    font-size: 13px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+
+  .band-head p {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .band-cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px 20px;
+    padding: 12px 16px 16px;
+    align-items: start;
+  }
+
+  .band-system .band-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tips {
+    grid-column: 1 / -1;
+  }
+
+  h3 {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--accent-ink);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 10px 0 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .col > h3:first-child { margin-top: 0; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  td {
+    padding: 4px 8px;
+    vertical-align: middle;
+    font-size: 15px;
+  }
+
+  td:first-child {
+    white-space: nowrap;
+    width: 1%;
+    padding-right: 12px;
+  }
+
+  td:last-child { color: #374151; }
+
+  code {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+    font-size: 13px;
+    background: var(--key-bg);
+    border: 1px solid var(--key-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--key-fg);
+    white-space: nowrap;
+  }
+
+  .note {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 0 2px 6px;
+  }
+
+  .tip-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+  }
+
+  .tip-list li {
+    padding: 5px 6px;
+    font-size: 15px;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .tip-list li:nth-child(odd) { background: #f9fafb; }
+  .tip-list li strong { color: #111; }
+  .tip-list li::before { content: "› "; color: var(--accent); font-weight: 700; }
+
+  @media (max-width: 1100px) {
+    .top-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .jump { justify-content: flex-start; }
+    .band-system .band-cols { grid-template-columns: 1fr; }
+    .tip-list { grid-template-columns: 1fr; }
+    html { scroll-padding-top: 110px; }
+  }
+
+  @media (max-width: 700px) {
+    body { font-size: 15px; }
+    .top-inner, main { padding-left: 14px; padding-right: 14px; }
+    .band-cols { grid-template-columns: 1fr; }
+    td:first-child { white-space: normal; width: auto; }
+  }
+
+  @media print {
+    body { background: #fff; }
+    .top { position: static; backdrop-filter: none; }
+    .jump { display: none; }
+    .band { box-shadow: none; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div>
+      <h1>Neovim Cheat Sheet</h1>
+      <p class="subtitle">Leader: <code>Space</code> &nbsp;·&nbsp; Window modifier: <code>Alt</code> (i3-style) &nbsp;·&nbsp; Local leader: <code>\</code> &nbsp;·&nbsp; <code>Spc</code> = Space</p>
+    </div>
+    <nav class="jump" aria-label="Sections">
+      <a href="#layout">Layout</a>
+      <a href="#find">Find</a>
+      <a href="#edit">Edit</a>
+      <a href="#code">Code</a>
+      <a href="#git">Git</a>
+      <a href="#system">System</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════════ LAYOUT ═══════════════ -->
+  <section id="layout" class="band band-layout">
+    <div class="band-head">
+      <h2>Layout</h2>
+      <p>Panes, workspaces, terminal, buffers</p>
+    </div>
+    <div class="band-cols">
+      <div class="col">
+        <h3>Panes</h3>
+        <table>
+          <tr><td><code>Alt+←↓↑→</code></td><td>Focus pane directionally</td></tr>
+          <tr><td><code>Alt+Shift+←↓↑→</code></td><td>Move pane directionally</td></tr>
+          <tr><td><code>Alt+r</code></td><td>Resize mode (arrows move divider, Esc to finish)</td></tr>
+        </table>
+        <h3>Splits</h3>
+        <table>
+          <tr><td><code>Alt+-</code></td><td>Split horizontal (pane below)</td></tr>
+          <tr><td><code>Alt+=</code></td><td>Split vertical (pane right)</td></tr>
+          <tr><td><code>Alt+q</code></td><td>Close pane</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Workspaces (Tabs = Repos)</h3>
+        <table>
+          <tr><td><code>Spc f p</code></td><td>Open / focus a repo workspace</td></tr>
+          <tr><td><code>Alt+1–9</code></td><td>Switch to workspace N (existing only)</td></tr>
+          <tr><td><code>Alt+Shift+1–9</code></td><td>Move buffer to workspace N</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Terminal</h3>
+        <table>
+          <tr><td><code>Alt+Enter</code></td><td>This workspace’s terminal (repo root)</td></tr>
+          <tr><td><code>Alt+\</code></td><td>This workspace’s Kiro terminal (repo root)</td></tr>
+          <tr><td><code>Ctrl-/</code></td><td>Toggle floating terminal</td></tr>
+          <tr><td><code>Ctrl-\</code> / <code>Esc</code></td><td>Exit terminal mode</td></tr>
+          <tr><td><code>Alt+arrows</code></td><td>Navigate out of terminal</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Buffers</h3>
+        <table>
+          <tr><td><code>H</code> / <code>L</code></td><td>Prev/next buffer</td></tr>
+          <tr><td><code>[b</code> / <code>]b</code></td><td>Prev/next buffer (alt)</td></tr>
+          <tr><td><code>Spc b d</code></td><td>Close buffer</td></tr>
+          <tr><td><code>Spc b D</code></td><td>Close other buffers</td></tr>
+          <tr><td><code>Spc b p</code></td><td>Toggle pin</td></tr>
+          <tr><td><code>Spc b P</code></td><td>Close non-pinned</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FIND ═══════════════ -->
+  <section id="find" class="band band-find">
+    <div class="band-head">
+      <h2>Find</h2>
+      <p>Pickers, files, jumps, in-buffer motion</p>
+    </div>
+    <div class="band-cols">
+      <div class="col">
+        <h3>Files &amp; Buffers</h3>
+        <table>
+          <tr><td><code>Spc Spc</code></td><td>Find files (cwd)</td></tr>
+          <tr><td><code>Spc f f</code></td><td>Find files (root)</td></tr>
+          <tr><td><code>Spc f r</code></td><td>Recent files (this repo)</td></tr>
+          <tr><td><code>Spc f R</code></td><td>Recent files (all)</td></tr>
+          <tr><td><code>Spc f g</code></td><td>Git files only</td></tr>
+          <tr><td><code>Spc f p</code></td><td>Open / focus repo workspace</td></tr>
+          <tr><td><code>Spc ,</code></td><td>Buffers (this repo)</td></tr>
+          <tr><td><code>Spc f B</code></td><td>Buffers (all workspaces)</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Search</h3>
+        <table>
+          <tr><td><code>Spc /</code></td><td>Live grep</td></tr>
+          <tr><td><code>Spc s w</code></td><td>Word under cursor</td></tr>
+          <tr><td><code>Spc s r</code></td><td>Search &amp; replace</td></tr>
+          <tr><td><code>Spc s R</code></td><td>Resume last picker</td></tr>
+        </table>
+        <h3>Other Pickers</h3>
+        <table>
+          <tr><td><code>Spc s h</code></td><td>Help tags</td></tr>
+          <tr><td><code>Spc s d</code></td><td>Diagnostics</td></tr>
+          <tr><td><code>Spc s k</code></td><td>Keymaps</td></tr>
+          <tr><td><code>Spc s c</code></td><td>Commands</td></tr>
+          <tr><td><code>Spc s t</code></td><td>TODOs</td></tr>
+          <tr><td><code>Spc s "</code></td><td>Registers</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Inside Picker</h3>
+        <table>
+          <tr><td><code>Ctrl-j/k</code></td><td>Move down/up</td></tr>
+          <tr><td><code>Enter</code></td><td>Open file</td></tr>
+          <tr><td><code>Ctrl-v</code> / <code>Ctrl-x</code></td><td>Vsplit / hsplit</td></tr>
+          <tr><td><code>Ctrl-t</code></td><td>New tab</td></tr>
+          <tr><td><code>Tab</code> / <code>Ctrl-q</code></td><td>Select / send to quickfix</td></tr>
+        </table>
+        <h3>In Buffer</h3>
+        <table>
+          <tr><td><code>Ctrl-d</code> / <code>Ctrl-u</code></td><td>Scroll ½ page down/up</td></tr>
+          <tr><td><code>n</code> / <code>N</code></td><td>Next/prev search result</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>File Explorer (Oil)</h3>
+        <div class="note">Edit filesystem like a buffer. <code>:w</code> to apply.</div>
+        <table>
+          <tr><td><code>-</code></td><td>Open parent directory</td></tr>
+          <tr><td><code>Spc e</code></td><td>Open explorer</td></tr>
+          <tr><td><code>Enter</code></td><td>Open file/dir</td></tr>
+          <tr><td><code>Ctrl-v</code> / <code>Ctrl-s</code></td><td>Vsplit / hsplit</td></tr>
+          <tr><td><code>Ctrl-p</code></td><td>Preview</td></tr>
+          <tr><td><code>Ctrl-c</code></td><td>Close oil</td></tr>
+          <tr><td><code>g.</code></td><td>Toggle hidden files</td></tr>
+          <tr><td><code>g?</code></td><td>Show help</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Flash.nvim (Jump)</h3>
+        <div class="note">Press <code>s</code>, type chars, pick label to jump.</div>
+        <table>
+          <tr><td><code>s</code></td><td>Flash jump</td></tr>
+          <tr><td><code>S</code></td><td>Flash treesitter node</td></tr>
+          <tr><td><code>r</code> (op-pending)</td><td>Remote flash</td></tr>
+          <tr><td><code>f/F/t/T</code></td><td>Enhanced f/t motions</td></tr>
+          <tr><td><code>Ctrl-s</code> (picker)</td><td>Toggle flash in picker</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ EDIT ═══════════════ -->
+  <section id="edit" class="band band-edit">
+    <div class="band-head">
+      <h2>Edit</h2>
+      <p>Insert, complete, surround, folds</p>
+    </div>
+    <div class="band-cols">
+      <div class="col">
+        <h3>General</h3>
+        <table>
+          <tr><td><code>jk</code></td><td>Exit insert mode</td></tr>
+          <tr><td><code>Ctrl-s</code></td><td>Save file (any mode)</td></tr>
+          <tr><td><code>Esc</code></td><td>Clear search highlights</td></tr>
+          <tr><td><code>p</code> (visual)</td><td>Paste without clobbering register</td></tr>
+          <tr><td><code>&lt;</code> / <code>&gt;</code> (visual)</td><td>Indent, stay in visual mode</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Completion (blink.cmp)</h3>
+        <table>
+          <tr><td><code>Ctrl-n</code> / <code>Ctrl-p</code></td><td>Next/prev item</td></tr>
+          <tr><td><code>Ctrl-y</code></td><td>Accept</td></tr>
+          <tr><td><code>Ctrl-e</code></td><td>Cancel/close</td></tr>
+          <tr><td><code>Ctrl-b</code> / <code>Ctrl-f</code></td><td>Scroll docs</td></tr>
+          <tr><td><code>Tab</code> / <code>Shift-Tab</code></td><td>Next/prev snippet placeholder</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Surround (mini.surround)</h3>
+        <table>
+          <tr><td><code>gsa</code></td><td>Add surrounding</td></tr>
+          <tr><td><code>gsd</code></td><td>Delete surrounding</td></tr>
+          <tr><td><code>gsr</code></td><td>Replace surrounding</td></tr>
+          <tr><td><code>gsf</code></td><td>Find surrounding</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Folding (nvim-ufo)</h3>
+        <table>
+          <tr><td><code>zR</code> / <code>zM</code></td><td>Open / close all folds</td></tr>
+          <tr><td><code>zr</code> / <code>zm</code></td><td>Open / close one level</td></tr>
+          <tr><td><code>zK</code></td><td>Peek fold under cursor</td></tr>
+        </table>
+        <h3>Illuminate</h3>
+        <table>
+          <tr><td><code>]]</code> / <code>[[</code></td><td>Next/prev word occurrence</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ CODE ═══════════════ -->
+  <section id="code" class="band band-code">
+    <div class="band-head">
+      <h2>Code</h2>
+      <p>LSP, diagnostics, todos, debug</p>
+    </div>
+    <div class="band-cols">
+      <div class="col">
+        <h3>LSP</h3>
+        <table>
+          <tr><td><code>g d</code></td><td>Go to definition</td></tr>
+          <tr><td><code>g D</code></td><td>Go to declaration</td></tr>
+          <tr><td><code>g r</code></td><td>References</td></tr>
+          <tr><td><code>g I</code></td><td>Go to implementation</td></tr>
+          <tr><td><code>g y</code></td><td>Go to type definition</td></tr>
+          <tr><td><code>K</code></td><td>Hover documentation</td></tr>
+          <tr><td><code>g K</code></td><td>Signature help</td></tr>
+          <tr><td><code>Spc c a</code></td><td>Code actions</td></tr>
+          <tr><td><code>Spc c r</code></td><td>Rename symbol</td></tr>
+          <tr><td><code>Spc c f</code></td><td>Format file</td></tr>
+          <tr><td><code>Spc c s</code></td><td>Symbol outline (Aerial)</td></tr>
+          <tr><td><code>] d</code> / <code>[ d</code></td><td>Next/prev diagnostic</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Trouble (Diagnostics)</h3>
+        <table>
+          <tr><td><code>Spc x x</code></td><td>Toggle diagnostics panel</td></tr>
+          <tr><td><code>Spc x X</code></td><td>Buffer diagnostics</td></tr>
+          <tr><td><code>Spc x L</code></td><td>Location list</td></tr>
+          <tr><td><code>Spc x Q</code></td><td>Quickfix list</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Todo Comments</h3>
+        <table>
+          <tr><td><code>] t</code> / <code>[ t</code></td><td>Next/prev TODO</td></tr>
+          <tr><td><code>Spc s t</code></td><td>Search all TODOs</td></tr>
+          <tr><td><code>Spc s T</code></td><td>Search TODO/FIX/FIXME</td></tr>
+          <tr><td><code>Spc x t</code></td><td>Todo list (Trouble)</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Debugging (DAP)</h3>
+        <table>
+          <tr><td><code>Spc d b</code></td><td>Toggle breakpoint</td></tr>
+          <tr><td><code>Spc d c</code></td><td>Continue</td></tr>
+          <tr><td><code>Spc d s</code></td><td>Step over</td></tr>
+          <tr><td><code>Spc d i</code></td><td>Step into</td></tr>
+          <tr><td><code>Spc d o</code></td><td>Step out</td></tr>
+          <tr><td><code>Spc d t</code></td><td>Terminate</td></tr>
+          <tr><td><code>Spc d u</code></td><td>Toggle DAP UI</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ GIT ═══════════════ -->
+  <section id="git" class="band band-git">
+    <div class="band-head">
+      <h2>Git</h2>
+      <p>LazyGit, hunks, side-by-side Diffview</p>
+    </div>
+    <div class="band-cols">
+      <div class="col">
+        <h3>LazyGit &amp; Hunks</h3>
+        <table>
+          <tr><td><code>Spc g g</code></td><td>LazyGit TUI</td></tr>
+          <tr><td><code>E</code> <em>(in LazyGit)</em></td><td>Diffview selected ref</td></tr>
+          <tr><td><code>Spc g l</code></td><td>LazyGit log (file)</td></tr>
+          <tr><td><code>Spc g b</code></td><td>Blame line</td></tr>
+          <tr><td><code>] h</code> / <code>[ h</code></td><td>Next/prev hunk</td></tr>
+          <tr><td><code>Spc g h s</code></td><td>Stage hunk</td></tr>
+          <tr><td><code>Spc g h r</code></td><td>Reset hunk</td></tr>
+          <tr><td><code>Spc g h S</code></td><td>Stage buffer</td></tr>
+          <tr><td><code>Spc g h R</code></td><td>Reset buffer</td></tr>
+          <tr><td><code>Spc g h p</code></td><td>Preview hunk</td></tr>
+          <tr><td><code>Spc g h d</code></td><td>Diff this</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Diffview — Opening</h3>
+        <table>
+          <tr><td><code>Spc g v</code></td><td>HEAD vs working tree</td></tr>
+          <tr><td><code>Spc g V</code></td><td>Close diffview</td></tr>
+          <tr><td><code>E</code> <em>(in LazyGit)</em></td><td>Selected ref vs working tree</td></tr>
+          <tr><td><code>Spc g h</code></td><td>File history (current file)</td></tr>
+          <tr><td><code>Spc g H</code></td><td>File history (repo)</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>File Panel (left)</h3>
+        <table>
+          <tr><td><code>j</code> / <code>k</code></td><td>Navigate files</td></tr>
+          <tr><td><code>Enter</code> / <code>l</code></td><td>Open diff for file</td></tr>
+          <tr><td><code>Tab</code> / <code>Shift-Tab</code></td><td>Cycle files</td></tr>
+          <tr><td><code>s</code> / <code>-</code></td><td>Stage / unstage</td></tr>
+          <tr><td><code>X</code></td><td>Restore file to ref</td></tr>
+          <tr><td><code>R</code></td><td>Refresh file list</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Diff View (right = working tree)</h3>
+        <table>
+          <tr><td><code>do</code></td><td>Pull hunk from ref side</td></tr>
+          <tr><td><code>] x</code> / <code>[ x</code></td><td>Next/prev hunk</td></tr>
+          <tr><td><code>e</code> / <code>b</code></td><td>Focus / toggle file panel</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SYSTEM ═══════════════ -->
+  <section id="system" class="band band-system">
+    <div class="band-head">
+      <h2>System</h2>
+      <p>Toggles, plugin UI, commands, tips</p>
+    </div>
+    <div class="band-cols">
+      <div class="col">
+        <h3>Misc</h3>
+        <table>
+          <tr><td><code>Spc K</code></td><td>Open k9s (new tab)</td></tr>
+          <tr><td><code>Spc r n</code></td><td>Reload Neovim config</td></tr>
+          <tr><td><code>Spc l</code></td><td>Lazy plugin manager</td></tr>
+          <tr><td><code>Spc u f</code></td><td>Toggle auto-format</td></tr>
+          <tr><td><code>Spc u w</code></td><td>Toggle line wrap</td></tr>
+          <tr><td><code>Spc u d</code></td><td>Toggle diagnostics</td></tr>
+          <tr><td><code>Spc u z</code></td><td>Toggle zen mode</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>Useful Commands</h3>
+        <table>
+          <tr><td><code>:Mason</code></td><td>Manage LSP servers, linters, formatters</td></tr>
+          <tr><td><code>:Lazy</code></td><td>Plugin manager</td></tr>
+          <tr><td><code>:LazyExtras</code></td><td>Browse / toggle LazyVim extras</td></tr>
+          <tr><td><code>:ConformInfo</code></td><td>Show active formatters</td></tr>
+          <tr><td><code>:LspInfo</code></td><td>Show active LSP clients</td></tr>
+          <tr><td><code>:Noice</code></td><td>Notification history</td></tr>
+        </table>
+      </div>
+      <div class="col tips">
+        <h3>Tips</h3>
+        <ul class="tip-list">
+          <li>Press <strong>Space</strong> and wait — which-key shows all bindings from that prefix.</li>
+          <li><strong>No tmux</strong> — nvim tabs = repo workspaces, splits = tiled panes (Alt = i3).</li>
+          <li><strong>Format on save</strong> is enabled via conform.nvim (shfmt, LSP formatters).</li>
+          <li><code>Spc f p</code> opens or focuses a repo tab. Find/grep stay in that repo.</li>
+          <li><strong>System clipboard</strong> is synced — yank in nvim, paste anywhere.</li>
+          <li><strong>Diffview</strong> right side is a live buffer — LSP, save, edit all work normally.</li>
+          <li><strong>Persistent undo</strong> — history survives across sessions.</li>
+          <li><strong>Oil</strong>: rename files by editing their names in the buffer and saving.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

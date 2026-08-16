@@ -75,6 +75,105 @@ function M.repo_root(path)
   return M.normalize(vim.fs.dirname(path))
 end
 
+local SKIP_DIR = {
+  node_modules = true,
+  target = true,
+  vendor = true,
+  dist = true,
+  build = true,
+}
+
+local MAX_REPO_DEPTH = 8
+
+---@param dir string
+---@return boolean
+local function is_git_repo(dir)
+  local st = vim.uv.fs_lstat(dir .. "/.git")
+  return st ~= nil and (st.type == "directory" or st.type == "file")
+end
+
+---@param dir string
+---@return boolean
+local function is_dir(dir)
+  local st = vim.uv.fs_stat(dir)
+  return st ~= nil and st.type == "directory"
+end
+
+--- Git repos under `roots`. Recurses into grouping folders, but does not
+--- descend into a directory once `.git` is found (no nested/submodule hits).
+---@param roots string[]|string|nil
+---@return string[]
+function M.list_repos(roots)
+  if type(roots) == "string" then
+    roots = { roots }
+  end
+  local found = {}
+  local seen = {}
+
+  local function walk(dir, depth)
+    if depth > MAX_REPO_DEPTH then
+      return
+    end
+    dir = M.normalize(dir)
+    if not dir or seen[dir] then
+      return
+    end
+    seen[dir] = true
+
+    if is_git_repo(dir) then
+      found[#found + 1] = dir
+      return
+    end
+
+    local handle = vim.uv.fs_scandir(dir)
+    if not handle then
+      return
+    end
+    while true do
+      local name = vim.uv.fs_scandir_next(handle)
+      if not name then
+        break
+      end
+      if not SKIP_DIR[name] and not name:match("^%.") then
+        local child = dir .. "/" .. name
+        if is_dir(child) then
+          walk(child, depth + 1)
+        end
+      end
+    end
+  end
+
+  for _, root in ipairs(roots or {}) do
+    local dir = vim.fn.fnamemodify(vim.fs.normalize(root), ":p")
+    if vim.fn.isdirectory(dir) == 1 then
+      walk(dir, 0)
+    end
+  end
+
+  return found
+end
+
+--- Label every tab as "N reponame" so Alt+1-9 still matches the bar.
+--- Bufferline reads t:name for the tab-page indicators.
+function M.sync_tab_names()
+  for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+    local nr = vim.api.nvim_tabpage_get_number(tab)
+    local repo = vim.t[tab].repo_name
+    if not repo or repo == "" then
+      local cwd = M.tab_cwd(tab)
+      if cwd then
+        repo = vim.fn.fnamemodify(cwd, ":t")
+        vim.t[tab].repo_name = repo
+      end
+    end
+    local label = (repo and repo ~= "") and (nr .. " " .. repo) or tostring(nr)
+    pcall(vim.api.nvim_tabpage_set_var, tab, "name", label)
+  end
+  pcall(function()
+    require("bufferline.ui").refresh()
+  end)
+end
+
 ---@param path string
 function M.tcd(path)
   local dir = M.normalize(path)
@@ -83,6 +182,7 @@ function M.tcd(path)
   end
   vim.cmd.tcd(vim.fn.fnameescape(dir))
   vim.t.repo_name = vim.fn.fnamemodify(dir, ":t")
+  M.sync_tab_names()
 end
 
 --- Return the window ID in the current tab that is displaying `bufnr`, or nil.

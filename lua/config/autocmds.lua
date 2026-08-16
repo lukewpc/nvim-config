@@ -91,6 +91,19 @@ autocmd("FileType", {
 })
 
 -- ╭─────────────────────────────────────────────────────────╮
+-- │ Workspaces                                               │
+-- ╰─────────────────────────────────────────────────────────╯
+
+-- Retitle tab-page indicators after tabs are created/closed (numbers shift)
+-- and after :tcd (DirChanged). VimEnter covers the first tab's cwd.
+autocmd({ "VimEnter", "TabNew", "TabClosed", "DirChanged" }, {
+  group = augroup("workspace_tab_names", { clear = true }),
+  callback = function()
+    require("config.workspaces").sync_tab_names()
+  end,
+})
+
+-- ╭─────────────────────────────────────────────────────────╮
 -- │ Terminal                                                  │
 -- ╰─────────────────────────────────────────────────────────╯
 

@@ -114,6 +114,7 @@ end
 --   Alt+Shift+h/j/k/l = move/swap pane
 --   Alt+-             = split horizontal (pane below)
 --   Alt+=             = split vertical (pane right)
+--   Alt+r             = resize mode (arrows move divider, Esc or Alt+r to finish)
 --   Alt+Enter         = open/focus this workspace's main terminal
 --   Alt+Backslash     = open/focus this workspace's kiro terminal
 --   Alt+q             = close pane (keep buffer alive)
@@ -136,6 +137,94 @@ map("n", "<A-S-Right>", "<cmd>wincmd L<CR>", { desc = "Move pane right" })
 -- Split creation (opens empty buffer in new pane, like i3 empty container)
 map("n", "<A-->", "<cmd>split | enew<CR>", { desc = "Split horizontal (empty pane below)" })
 map("n", "<A-=>", "<cmd>vsplit | enew<CR>", { desc = "Split vertical (empty pane right)" })
+
+-- Alt+r: i3-style resize mode. Arrows move a divider, not grow/shrink the
+-- current pane: prefer the edge below / to the right; if this pane is on
+-- the bottom or right of the tab, move the edge above / to the left instead.
+-- Esc, Enter, or Alt+r leaves. hjkl are aliases for the arrows.
+local RESIZE_W, RESIZE_H = 5, 3
+
+local function win_in_dir(dir)
+  local cur = vim.fn.winnr()
+  local other = vim.fn.winnr(dir)
+  if cur == other then
+    return nil
+  end
+  return vim.fn.win_getid(other)
+end
+
+local function move_divider(dir)
+  local cur = vim.api.nvim_get_current_win()
+  if dir == "down" or dir == "up" then
+    local offset = dir == "down" and RESIZE_H or -RESIZE_H
+    local below = win_in_dir("j")
+    if below then
+      vim.fn.win_move_statusline(cur, offset)
+    else
+      local above = win_in_dir("k")
+      if above then
+        vim.fn.win_move_statusline(above, offset)
+      end
+    end
+  else
+    local offset = dir == "right" and RESIZE_W or -RESIZE_W
+    local right = win_in_dir("l")
+    if right then
+      vim.fn.win_move_separator(cur, offset)
+    else
+      local left = win_in_dir("h")
+      if left then
+        vim.fn.win_move_separator(left, offset)
+      end
+    end
+  end
+end
+
+local resize_keys = {
+  [vim.keycode("<Left>")] = "left",
+  [vim.keycode("<Right>")] = "right",
+  [vim.keycode("<Up>")] = "up",
+  [vim.keycode("<Down>")] = "down",
+  h = "left",
+  l = "right",
+  k = "up",
+  j = "down",
+}
+local resize_exit = {
+  [vim.keycode("<Esc>")] = true,
+  [vim.keycode("<CR>")] = true,
+  [vim.keycode("<A-r>")] = true,
+}
+
+local function resize_mode()
+  local hint = " RESIZE   arrows move divider   Esc to finish "
+  vim.api.nvim_echo({ { hint, "WarningMsg" } }, false, {})
+  vim.cmd.redraw()
+  while true do
+    local ok, key = pcall(vim.fn.getcharstr)
+    if not ok or not key or resize_exit[key] then
+      break
+    end
+    local dir = resize_keys[key]
+    if dir then
+      move_divider(dir)
+    end
+    vim.api.nvim_echo({ { hint, "WarningMsg" } }, false, {})
+    vim.cmd.redraw()
+  end
+  vim.api.nvim_echo({}, false, {})
+end
+
+map({ "n", "t" }, "<A-r>", function()
+  local from_term = vim.api.nvim_get_mode().mode == "t"
+  if from_term then
+    vim.cmd("stopinsert")
+  end
+  resize_mode()
+  if from_term and vim.bo.buftype == "terminal" then
+    vim.cmd("startinsert")
+  end
+end, { desc = "Resize pane (i3 mode)" })
 
 -- Alt+Enter: open/focus main terminal (bottom right)
 map({ "n", "t" }, "<A-CR>", workspaces.open_main_term, { desc = "Open/focus main terminal" })

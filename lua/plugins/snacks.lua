@@ -18,10 +18,32 @@ return {
         grep = {
           hidden = true,   -- also search inside hidden dirs when grepping
         },
-        -- Confirm opens/focuses a repo tab (:tcd). Do not use load_session
-        -- (that does a global chdir and can clobber every tab).
+        -- Walk `dev` for git repos; stop at the first `.git` so nested
+        -- modules and package.json trees are not listed. Confirm opens a
+        -- repo tab (:tcd). Do not use load_session (global chdir).
         projects = {
-          dev = { "/workspace", "~/dev", "~/projects", "~/personal" },
+          dev = { "/workspace", "~/dev", "~/projects" },
+          recent = false,
+          finder = function(opts, ctx)
+            return function(cb)
+              local seen = {}
+              local function add(dir)
+                if not dir or seen[dir] then
+                  return
+                end
+                seen[dir] = true
+                if ctx.filter:match({ file = dir, text = dir }) then
+                  cb({ file = dir, text = dir, dir = true })
+                end
+              end
+              for _, dir in ipairs(opts.projects or {}) do
+                add(require("config.workspaces").normalize(dir))
+              end
+              for _, dir in ipairs(require("config.workspaces").list_repos(opts.dev)) do
+                add(dir)
+              end
+            end
+          end,
           confirm = function(picker, item)
             picker:close()
             if item and item.file then
