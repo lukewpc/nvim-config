@@ -36,10 +36,15 @@ function M.diffview(ref)
   end
   vim.schedule(function()
     close_lazygit()
-    local ok, err = pcall(vim.cmd, "DiffviewOpen " .. vim.fn.fnameescape(ref))
-    if not ok then
-      vim.notify("DiffviewOpen failed: " .. tostring(err), vim.log.levels.ERROR)
-    end
+    -- Defer DiffviewOpen until after the lazygit window close has fully
+    -- settled. Opening immediately causes diffview's sync_scroll to call
+    -- nvim_win_call on a stale window handle, producing a layout error.
+    vim.defer_fn(function()
+      local ok, err = pcall(vim.cmd, "DiffviewOpen " .. vim.fn.fnameescape(ref))
+      if not ok then
+        vim.notify("DiffviewOpen failed: " .. tostring(err), vim.log.levels.ERROR)
+      end
+    end, 50)
   end)
   return ""
 end
