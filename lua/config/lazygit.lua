@@ -79,6 +79,13 @@ end
 local function write_yml()
   -- Single-quoted YAML so `| quote` and `{{...}}` stay literal for LazyGit.
   local lines = {
+    -- Override edit commands so `e` opens in the current window/tab, not a new
+    -- tab. Lazygit's built-in nvim-remote preset uses --remote-tab; we swap it
+    -- for --remote so the file lands in the current tab's active window.
+    "os:",
+    '  edit: "nvim --server \\"$NVIM\\" --remote {{filename}}"',
+    '  editAtLine: "nvim --server \\"$NVIM\\" --remote {{filename}} && nvim --server \\"$NVIM\\" --remote-send \\":{{line}}<CR>\\""',
+    '  editAtLineAndWait: "nvim --server \\"$NVIM\\" --remote-wait {{filename}} && nvim --server \\"$NVIM\\" --remote-send \\":{{line}}<CR>\\""',
     "customCommands:",
     '  - key: "E"',
     '    context: "commits, subCommits, reflogCommits"',
