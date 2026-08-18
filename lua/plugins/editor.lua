@@ -88,12 +88,20 @@ return {
   --   i            toggle tree/list view
   --   g?           open help
   --
-  -- In the diff view:
-  --   do           pull hunk from left (ref) into right (working tree) — standard vim diffget
+  -- In the diff view (left=ref, right=working tree):
+  --   X            pull hunk under cursor from ref into working tree (diffget)
+  --   do           same as X (standard vim diffget, kept for muscle memory)
   --   ]x / [x      next / prev conflict or hunk
   --   e            focus the file panel
   --   b            toggle file panel visibility
   --
+  -- In the file panel:
+  --   X            restore whole file to ref state
+  --   s / -        stage / unstage entry
+  --
+  -- NOTE: X in the diff view only works when cursor is on the RIGHT side
+  -- (working tree). Navigate to the hunk you want to pull, then press X.
+  -- Use ]x/[x to jump between hunks.
   {
     "sindrets/diffview.nvim",
     cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
@@ -134,6 +142,18 @@ return {
         win_config = {
           position = "left",
           width = 40,
+        },
+      },
+
+      keymaps = {
+        -- In the diff view panes, X pulls the hunk under cursor from the ref
+        -- side into the working tree (same key as file panel's whole-file restore).
+        -- Must be on the right-side (working tree) buffer.
+        diff2 = {
+          { "n", "X", function()
+            -- diffget pulls from the other (left/ref) window into current (right/working tree)
+            vim.cmd("normal! do")
+          end, { desc = "Pull hunk from ref (diffget)" } },
         },
       },
     },
